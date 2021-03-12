@@ -230,10 +230,10 @@ public class DetailPanel extends Panel {
 		});
 		
 		historyTable.addControlListener(new ControlAdapter() {			
-			@Override
-			public void controlResized(ControlEvent e) {
-				resizeColumns();
-			}			
+			//@Override
+			//public void controlResized(ControlEvent e) {
+			//	resizeColumns();
+			//}
 		});
 	}
 
