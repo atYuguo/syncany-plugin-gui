@@ -11,3 +11,4 @@ gradle/arch/syncany/src
 gradle/arch/syncany/syncany*.tar*
 osx-notifier.zip
 .recommenders
+.idea/*

@@ -94,6 +94,8 @@ dependencies {
 	compile		"com.google.guava:guava:15.0"
 	compile 	"commons-io:commons-io:2.4"
 	compile		"org.ocpsoft.prettytime:prettytime:3.2.5.Final"
+	compile     "net.sf.jopt-simple:jopt-simple:4.7"
+	compile     "io.undertow:undertow-core:2.2.5.Final"
 
 	pluginjar			"commons-net:commons-net:2.2"
 	pluginjar			"commons-beanutils:commons-beanutils:1.9.0"
@@ -174,72 +176,74 @@ task cleanInstallAndLibDirs(type: Delete) {
 	delete files("build/libs")
 }
 
-rootProject.installApp.mustRunAfter = [cleanInstallAndLibDirs] // Dirty hack to fix order in dependsOn
+rootProject.installDist.mustRunAfter = [cleanInstallAndLibDirs] // Dirty hack to fix order in dependsOn
 
-task exeWithGui(dependsOn: [cleanInstallAndLibDirs, rootProject.installApp, pluginJar]) << {
-	String applicationArchitecuresAllowed = (pluginArchitecture == "x86") ? "x86" : "x64"
-	String applicationArchitecureSuffix = pluginArchitecture;
+task exeWithGui(dependsOn: [cleanInstallAndLibDirs, rootProject.installDist, pluginJar]) {
+	doLast {
+		String applicationArchitecuresAllowed = (pluginArchitecture == "x86") ? "x86" : "x64"
+		String applicationArchitecureSuffix = pluginArchitecture;
 
-	def innoSetupDir = new File("${buildDir}/innosetup")
+		def innoSetupDir = new File("${buildDir}/innosetup")
 
-	delete innoSetupDir
-	innoSetupDir.mkdir();
+		delete innoSetupDir
+		innoSetupDir.mkdir();
 
-	copy {
-		from("${rootProject.projectDir}/build/install")
-		into("${buildDir}/install")
-	}
-
-	copy {
-		from("${rootProject.projectDir}/gradle/innosetup/setup-icon.ico")
-		into("${buildDir}/install/syncany")
-		rename("setup-icon.ico", "syncany.ico")
-	}
-
-	copy {
-		from("${buildDir}/libs")
-		include("*.jar")
-		into("${buildDir}/install/syncany/lib")
-	}
-
-	copy {
-		from("${rootProject.projectDir}/gradle/innosetup/setup-left.bmp")
-		from("${rootProject.projectDir}/gradle/innosetup/setup-top.bmp")
-		from("${rootProject.projectDir}/gradle/innosetup/setup-info-before.rtf")
-		from("${rootProject.projectDir}/gradle/innosetup/setup-info-after.rtf")
-		from("${rootProject.projectDir}/gradle/innosetup/setup-icon.ico")
-		from("${rootProject.projectDir}/gradle/innosetup/modpath.iss")
-		from("${rootProject.projectDir}/gradle/innosetup/code.iss")
-		into(innoSetupDir)
-	}
-
-	copy {
-		from("gradle/innosetup/launcher.vbs")
-		into("${buildDir}/install/syncany/bin")
-	}
-
-	copy {
-		from("gradle/innosetup/setup-gui.iss.skel")
-		rename("setup-gui.iss.skel", "setup-gui.iss")
-		expand([
-			applicationVersion: "${applicationVersion}",
-			applicationVersionFull: "${applicationVersionFull}",
-			applicationArchitecuresAllowed: "${applicationArchitecuresAllowed}",
-			applicationArchitecureSuffix: "${applicationArchitecureSuffix}"
-		])
-		into(innoSetupDir)
-	}
-
-	exec {
-		workingDir projectDir
-		commandLine "iscc ${innoSetupDir}/setup-gui.iss".split()
-	}
-
-	if (!project.ext.has('pluginExeDontCopyToUpload')) {
 		copy {
-			from files("${buildDir}/innosetup")
-			include "*.exe"
-			into file("${buildDir}/upload")
+			from("${rootProject.projectDir}/build/install")
+			into("${buildDir}/install")
+		}
+
+		copy {
+			from("${rootProject.projectDir}/gradle/innosetup/setup-icon.ico")
+			into("${buildDir}/install/syncany")
+			rename("setup-icon.ico", "syncany.ico")
+		}
+
+		copy {
+			from("${buildDir}/libs")
+			include("*.jar")
+			into("${buildDir}/install/syncany/lib")
+		}
+
+		copy {
+			from("${rootProject.projectDir}/gradle/innosetup/setup-left.bmp")
+			from("${rootProject.projectDir}/gradle/innosetup/setup-top.bmp")
+			from("${rootProject.projectDir}/gradle/innosetup/setup-info-before.rtf")
+			from("${rootProject.projectDir}/gradle/innosetup/setup-info-after.rtf")
+			from("${rootProject.projectDir}/gradle/innosetup/setup-icon.ico")
+			from("${rootProject.projectDir}/gradle/innosetup/modpath.iss")
+			from("${rootProject.projectDir}/gradle/innosetup/code.iss")
+			into(innoSetupDir)
+		}
+
+		copy {
+			from("gradle/innosetup/launcher.vbs")
+			into("${buildDir}/install/syncany/bin")
+		}
+
+		copy {
+			from("gradle/innosetup/setup-gui.iss.skel")
+			rename("setup-gui.iss.skel", "setup-gui.iss")
+			expand([
+					applicationVersion            : "${applicationVersion}",
+					applicationVersionFull        : "${applicationVersionFull}",
+					applicationArchitecuresAllowed: "${applicationArchitecuresAllowed}",
+					applicationArchitecureSuffix  : "${applicationArchitecureSuffix}"
+			])
+			into(innoSetupDir)
+		}
+
+		exec {
+			workingDir projectDir
+			commandLine "iscc ${innoSetupDir}/setup-gui.iss".split()
+		}
+
+		if (!project.ext.has('pluginExeDontCopyToUpload')) {
+			copy {
+				from files("${buildDir}/innosetup")
+				include "*.exe"
+				into file("${buildDir}/upload")
+			}
 		}
 	}
 }

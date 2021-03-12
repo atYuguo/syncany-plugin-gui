@@ -49,7 +49,7 @@ task pluginJar(type: Jar, dependsOn: [processResources, compileJava]) {
 		}
 	}
 
-	from files(sourceSets.main.output.classesDir)
+	from files(sourceSets.main.output.classesDirs)
 	from files(sourceSets.main.output.resourcesDir)
 	from {
 		configurations.pluginjar.collect {

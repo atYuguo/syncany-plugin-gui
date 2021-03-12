@@ -26,6 +26,7 @@ import io.undertow.websockets.core.WebSocketCallback;
 import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSocketVersion;
 import io.undertow.websockets.core.WebSockets;
+import io.undertow.server.DefaultByteBufferPool;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,10 +35,12 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Collections;
 
 import javax.net.ssl.SSLContext;
 
@@ -181,7 +184,9 @@ public class GuiWebSocketClient {
 		
 		SSLContext sslContext = UserConfig.createUserSSLContext();
 		Xnio xnio = Xnio.getInstance(this.getClass().getClassLoader());
-		Pool<ByteBuffer> buffer = new ByteBufferSlicePool(BufferAllocator.BYTE_BUFFER_ALLOCATOR, 1024, 1024);
+		//Pool<ByteBuffer> buffer = new ByteBufferSlicePool(BufferAllocator.BYTE_BUFFER_ALLOCATOR, 1024, 1024);
+
+		DefaultByteBufferPool buffer = new DefaultByteBufferPool(false, 1024, 1024, 0);
 
 		OptionMap workerOptions = OptionMap.builder()
 				.set(Options.WORKER_IO_THREADS, 2)
@@ -199,11 +204,11 @@ public class GuiWebSocketClient {
 
 		WebSocketClientNegotiation clientNegotiation = new WebSocketClientNegotiation(new ArrayList<String>(), new ArrayList<WebSocketExtension>()) {
 			@Override
-			public void beforeRequest(Map<String, String> headers) {
+			public void beforeRequest(Map<String, List<String>> headers) {
 				String basicAuthPlainUserPass = daemonUser.getUsername() + ":" + daemonUser.getPassword();
 				String basicAuthEncodedUserPass = Base64.encodeBase64String(StringUtil.toBytesUTF8(basicAuthPlainUserPass));
 				
-				headers.put("Authorization", "Basic " + basicAuthEncodedUserPass);
+				headers.put("Authorization", Collections.singletonList("Basic " + basicAuthEncodedUserPass));
 			}
 		};
 		
