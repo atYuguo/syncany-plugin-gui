@@ -1,0 +1,55 @@
+//
+// Build script for Syncany
+//
+
+apply from: 'gradle/gradle/helpers.gradle'
+
+// Global Settings /////////////////////////////////////////////////////////////
+
+project.ext {
+    applicationVersion = "0.4.9-alpha"
+    applicationVersionDebian = "1";
+
+    applicationRelease = isApplicationRelease()
+    applicationDate = new Date()
+    applicationRevision = getRevision()
+
+    applicationVersionSnapshot = (!applicationRelease) ? "+SNAPSHOT.${asUTC(applicationDate, 'yyMMddHHmm')}.git${applicationRevision}" : ""
+    applicationVersionFull = "${applicationVersion}${applicationVersionSnapshot}"
+}
+
+// Gradle scripts and tasks ////////////////////////////////////////////////////
+
+apply from: 'gradle/gradle/application.java.gradle'
+apply from: 'gradle/gradle/application.distribution.gradle'
+
+apply from: 'gradle/gradle/packaging.innosetup.gradle'
+apply from: 'gradle/gradle/packaging.debian.gradle'
+
+apply from: 'gradle/gradle/reports.coverage.gradle'
+apply from: 'gradle/gradle/reports.tests.gradle'
+apply from: 'gradle/gradle/reports.javadoc.gradle'
+
+apply from: 'gradle/gradle/development.eclipse.gradle'
+apply from: 'gradle/gradle/development.fakeinstall.gradle'
+apply from: 'gradle/gradle/development.misc.gradle'
+
+// Projects settings  //////////////////////////////////////////////////////////
+
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    implementation      project(":syncany-lib")
+    implementation      project(":syncany-cli")
+    implementation      project(":syncany-util")
+
+    testImplementation  project(path: ":syncany-lib", configuration: "tests")
+    testImplementation  project(path: ":syncany-cli", configuration: "tests")
+    testImplementation  project(path: ":syncany-util", configuration: "tests")
+
+    testRuntimeOnly     "org.slf4j:slf4j-log4j12:1.7.5"
+    testRuntimeOnly     "log4j:log4j:1.2.7"
+}
